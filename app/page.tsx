@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Star, Eye, Download, User, Calendar, Hash, Zap, Globe, Settings, Search, Filter, ArrowUpRight, ChevronLeft, ChevronRight, X, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
-
+import Link from 'next/link';
 interface Template {
   id: string;
   title: string;
@@ -307,7 +307,7 @@ const Dashboard = () => {
                   <Calendar className="w-4 h-4" />
                   <span className="text-sm">Created</span>
                 </div>
-                <p className="font-medium text-gray-900">{formatDate(selectedTemplate.created)}</p>
+                <p className="font-medium text-gray-900">{formatDate(selectedTemplate.created_at)}</p>
               </div>
             </div>
 
@@ -432,7 +432,7 @@ const Dashboard = () => {
         {loading && (
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600 text-lg">Loading templates from Notion...</p>
+            <p className="mt-4 text-gray-600 text-lg">Loading templates from data...</p>
           </div>
         )}
 
@@ -509,18 +509,18 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3 text-gray-500" />
-                      <span className="text-xs text-gray-500">{formatDate(item.created).split(',')[0]}</span>
+                      <span className="text-xs text-gray-500">{formatDate(item.created_at).split(',')[0]}</span>
                     </div>
                   </div>
                   
                   {/* Action Buttons */}
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => openModal(item)}
-                      className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                    <Link
+                      href={`/template/${item.id}`}
+                      className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-center"
                     >
                       View Details
-                    </button>
+                    </Link>
                     <a
                       href={item.link}
                       target="_blank"
