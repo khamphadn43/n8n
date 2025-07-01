@@ -355,39 +355,80 @@ const Dashboard = () => {
 
         {/* Improved Search and Filter Bar */}
         {!loading && (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-            <div className="flex flex-col gap-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search templates by title, description, category, or author..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-500 text-gray-900 font-medium text-lg"
-                />
-              </div>
-
-              {/* Category Filter */}
-              <div className="flex items-center gap-4">
-                {/* ... rest of filter code */}
-              </div>
-
-              {/* Results Info */}
-              {!loading && (
-                <div className="pt-4 border-t border-gray-100">
-                  <p className="text-sm text-gray-600">
-                    Showing {data.length} of {pagination.totalItems} templates
-                    {selectedCategory !== 'All' && ` in ${selectedCategory}`}
-                    {searchTerm && ` matching "${searchTerm}"`}
-                  </p>
-                </div>
-              )}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+          <div className="flex flex-col gap-4">
+            {/* Search Bar - Full Width */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search templates by title, description, category, or author..."
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-500 text-gray-900 font-medium text-lg"
+              />
             </div>
-          </div>
-        )}
 
+            {/* Category Filter - Dropdown for many categories */}
+            <div className="flex items-center gap-4">
+              <Filter className="w-5 h-5 text-gray-500" />
+              <div className="relative">
+                <button
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium min-w-[200px] justify-between"
+                >
+                  <span>{selectedCategory}</span>
+                  {showCategoryDropdown ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                
+                {showCategoryDropdown && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-64 overflow-y-auto">
+                    {categories.map(category => (
+                      <button
+                        key={category}
+                        onClick={() => handleCategoryChange(category)}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl ${
+                          selectedCategory === category ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Popular categories as quick filters */}
+              <div className="flex flex-wrap gap-2 ml-4">
+                {['AI', 'Engineering', 'Sales'].filter(cat => categories.includes(cat)).map(category => (
+                  <button
+                    key={category}
+                    onClick={() => handleCategoryChange(category)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                      selectedCategory === category
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Results Info */}
+            {!loading && (
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-sm text-gray-600">
+                  Showing {data.length} of {pagination.totalItems} templates
+                  {selectedCategory !== 'All' && ` in ${selectedCategory}`}
+                  {searchTerm && ` matching "${searchTerm}"`}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        )}
         {loading && (
           <div>
             {/* Search and Filter Skeleton */}
