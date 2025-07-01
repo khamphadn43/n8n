@@ -28,28 +28,28 @@ export async function GET(request: Request) {
 
     // Get paginated data
     const offset = (page - 1) * limit;
-    const dataResult = await sql.query(`
-      SELECT 
-        id, title, description, category, link, author, created_at,
-        views, downloads, rating, is_free as "isFree",
-        html_content,
-        ARRAY[category] as tags,
-        json_build_object(
-          'views', views,
-          'downloads', downloads, 
-          'rating', rating
-        ) as stats
-      FROM templates
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `, [...params, limit, offset]);
+    // Thay query cũ bằng query tối ưu này
+const dataResult = await sql`
+  SELECT 
+    id, title, description, category, link, author, created_at,
+    views, downloads, rating, is_free as "isFree", 
+    ARRAY[category] as tags
+  FROM templates 
+  WHERE status = 'active'
+    ${category && category !== 'All' ? sql`AND category = ${category}` : sql``}
+    ${search ? sql`AND (title ILIKE ${'%' + search + '%'} OR description ILIKE ${'%' + search + '%'})` : sql``}
+  ORDER BY created_at DESC
+  LIMIT ${limit} OFFSET ${(page - 1) * limit}
+`;
 
-    // Get total count
-    const countResult = await sql.query(
-      `SELECT COUNT(*) as total FROM templates ${whereClause}`, 
-      params
-    );
+// Đếm total với query tối ưu
+const countResult = await sql`
+  SELECT COUNT(*) as total 
+  FROM templates 
+  WHERE status = 'active'
+    ${category && category !== 'All' ? sql`AND category = ${category}` : sql``}
+    ${search ? sql`AND (title ILIKE ${'%' + search + '%'} OR description ILIKE ${'%' + search + '%'})` : sql``}
+`;
     const totalItems = parseInt(countResult.rows[0].total);
 
     // Get categories
