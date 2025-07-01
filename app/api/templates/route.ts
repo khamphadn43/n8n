@@ -9,49 +9,53 @@ export async function GET(request: Request) {
     const category = searchParams.get('category') || '';
     const search = searchParams.get('search') || '';
 
-    // Build WHERE clause for filtering
-    let whereClause = "status = 'active'";
+    // Build WHERE clause
+    let whereClause = "WHERE status = 'active'";
+    const params: any[] = [];
+    let paramIndex = 1;
+
     if (category && category !== 'All') {
-      whereClause += ` AND category = '${category}'`;
+      whereClause += ` AND category = $${paramIndex}`;
+      params.push(category);
+      paramIndex++;
     }
+
     if (search) {
-      whereClause += ` AND (title ILIKE '%${search}%' OR description ILIKE '%${search}%')`;
+      whereClause += ` AND (title ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex++;
     }
 
+    // Get paginated data
     const offset = (page - 1) * limit;
-
-    const result = await sql`
-      WITH data_query AS (
-        SELECT 
-          id, title, description, category, link, author, created_at,
-          views, downloads, rating, is_free as "isFree",
-          ROW_NUMBER() OVER (ORDER BY created_at DESC) as rn
-        FROM templates 
-        WHERE ${sql.unsafe(whereClause)}
-      ),
-      categories_query AS (
-        SELECT DISTINCT category FROM templates WHERE status = 'active'
-      ),
-      count_query AS (
-        SELECT COUNT(*) as total FROM templates WHERE status = 'active'
-        ${category && category !== 'All' ? sql.unsafe(`AND category = '${category}'`) : sql``}
-        ${search ? sql.unsafe(`AND (title ILIKE '%${search}%' OR description ILIKE '%${search}%')`) : sql``}
-      )
+    const dataResult = await sql.query(`
       SELECT 
-        json_build_object(
-          'data', json_agg(data_query.*) FILTER (WHERE rn > ${offset} AND rn <= ${offset + limit}),
-          'total', (SELECT total FROM count_query),
-          'categories', (SELECT array_agg(category) FROM categories_query)
-        ) as result
-      FROM data_query
+        id, title, description, category, link, author, created_at,
+        views, downloads, rating, is_free as "isFree", 
+        ARRAY[category] as tags
+      FROM templates 
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `, [...params, limit, offset]);
+
+    // Get total count
+    const countResult = await sql.query(
+      `SELECT COUNT(*) as total FROM templates ${whereClause}`, 
+      params
+    );
+
+    // Get categories
+    const categoriesResult = await sql`
+      SELECT DISTINCT category FROM templates WHERE status = 'active' ORDER BY category
     `;
 
-    const data = result.rows[0].result;
-    const totalItems = data.total || 0;
+    const totalItems = parseInt(countResult.rows[0].total);
     const totalPages = Math.ceil(totalItems / limit);
-    
+    const categories = categoriesResult.rows.map(row => row.category);
+
     return NextResponse.json({
-      data: data.data || [],
+      data: dataResult.rows,
       pagination: {
         currentPage: page,
         totalPages,
@@ -60,11 +64,23 @@ export async function GET(request: Request) {
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       },
-      categories: data.categories || []
+      categories
     });
 
   } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Database error:', error);
+    return NextResponse.json({ 
+      error: error.message,
+      data: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 12,
+        hasNextPage: false,
+        hasPrevPage: false
+      },
+      categories: []
+    }, { status: 500 });
   }
 }
