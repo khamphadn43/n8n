@@ -163,7 +163,7 @@ export default async function TemplatePage({ params }: { params: { id: string } 
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
           <div 
             className="prose prose-lg max-w-none text-gray-900
-           [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:border-b [&_h2]:border-gray-300 [&_h2]:pb-3 [&_h2]:mb-6
+           [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-red-600 [&_h2]:pb-3 [&_h2]:mb-6
            [&_p]:text-gray-800 [&_p]:leading-relaxed [&_p]:mb-4 [&_p]:font-medium
            [&_ul]:space-y-3 [&_ul]:mb-6
            [&_ol]:space-y-3 [&_ol]:mb-6  
